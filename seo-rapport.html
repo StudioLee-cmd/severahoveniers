@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SEO Rapport — Severa Hoveniers | StudioLee</title>
+  <meta name="description" content="Uitgebreid SEO-auditrapport voor severahoveniers.nl, opgesteld door StudioLee.">
+  <meta name="robots" content="noindex, nofollow">
+  <style>
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      color: #1e293b;
+      background: #f8fafc;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== NAV ===== */
+    .nav {
+      background: #1a1a2e;
+      padding: 0.75rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    }
+    .nav-brand {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      text-decoration: none;
+      letter-spacing: 0.5px;
+    }
+    .nav-brand span { color: #3b82f6; }
+    .nav-links { display: flex; gap: 1.5rem; list-style: none; }
+    .nav-links a {
+      color: rgba(255,255,255,0.75);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active { color: #fff; }
+
+    /* ===== HERO / HEADER ===== */
+    .hero {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #fff;
+      padding: 3.5rem 2rem 3rem;
+      text-align: center;
+    }
+    .hero-label {
+      display: inline-block;
+      background: rgba(59,130,246,0.15);
+      color: #93c5fd;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      padding: 0.4rem 1rem;
+      border-radius: 50px;
+      border: 1px solid rgba(59,130,246,0.25);
+      margin-bottom: 1.25rem;
+    }
+    .hero h1 {
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+    .hero h1 span { color: #3b82f6; }
+    .hero-sub {
+      font-size: 1.05rem;
+      color: rgba(255,255,255,0.65);
+      margin-bottom: 0.25rem;
+    }
+    .hero-date {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.4);
+    }
+
+    /* ===== CONTAINER ===== */
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    /* ===== SCORE OVERVIEW ===== */
+    .score-section {
+      padding: 3rem 0 2rem;
+    }
+    .score-section h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 2rem;
+      text-align: center;
+      color: #1a1a2e;
+    }
+    .score-hero-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      margin-bottom: 2rem;
+      border: 1px solid #e2e8f0;
+    }
+    .total-score {
+      font-size: 5rem;
+      font-weight: 900;
+      color: #ef4444;
+      line-height: 1;
+    }
+    .total-score span {
+      font-size: 2rem;
+      color: #94a3b8;
+      font-weight: 400;
+    }
+    .total-label {
+      font-size: 1rem;
+      color: #64748b;
+      margin-top: 0.5rem;
+      font-weight: 500;
+    }
+    .total-verdict {
+      display: inline-block;
+      margin-top: 1rem;
+      background: #fef2f2;
+      color: #dc2626;
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 0.4rem 1.2rem;
+      border-radius: 50px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .score-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 1rem;
+    }
+    .score-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.25rem;
+      text-align: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+      border: 1px solid #e2e8f0;
+    }
+    .score-card-value {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+    .score-card-value span {
+      font-size: 1rem;
+      color: #94a3b8;
+      font-weight: 400;
+    }
+    .score-card-label {
+      font-size: 0.8rem;
+      color: #64748b;
+      font-weight: 500;
+      margin-top: 0.35rem;
+    }
+    .score-bar {
+      height: 4px;
+      background: #f1f5f9;
+      border-radius: 2px;
+      margin-top: 0.75rem;
+      overflow: hidden;
+    }
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.8s ease;
+    }
+    .score-red { color: #ef4444; }
+    .score-orange { color: #f59e0b; }
+    .score-green { color: #22c55e; }
+    .bar-red { background: #ef4444; }
+    .bar-orange { background: #f59e0b; }
+    .bar-green { background: #22c55e; }
+
+    /* ===== ISSUES SECTION ===== */
+    .issues-section {
+      padding: 2rem 0 3rem;
+    }
+    .issues-section h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: #1a1a2e;
+    }
+    .issues-intro {
+      color: #64748b;
+      margin-bottom: 2rem;
+      font-size: 0.95rem;
+    }
+
+    .issue-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.5rem 1.75rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+      border: 1px solid #e2e8f0;
+      border-left: 4px solid #e2e8f0;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .issue-card:hover {
+      box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+      transform: translateY(-1px);
+    }
+    .issue-card.critical { border-left-color: #ef4444; }
+    .issue-card.warning { border-left-color: #f59e0b; }
+    .issue-card.info { border-left-color: #3b82f6; }
+
+    .issue-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .issue-number {
+      width: 28px;
+      height: 28px;
+      background: #f1f5f9;
+      color: #64748b;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .issue-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #1a1a2e;
+      flex: 1;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 0.25rem 0.65rem;
+      border-radius: 50px;
+      flex-shrink: 0;
+    }
+    .badge-critical { background: #fef2f2; color: #dc2626; }
+    .badge-warning { background: #fffbeb; color: #d97706; }
+    .badge-info { background: #eff6ff; color: #2563eb; }
+
+    .issue-body {
+      color: #475569;
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
+    .issue-body code {
+      background: #f1f5f9;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.82rem;
+      color: #e11d48;
+    }
+    .issue-impact {
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #f1f5f9;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+    .impact-icon {
+      color: #94a3b8;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .impact-text {
+      font-size: 0.82rem;
+      color: #64748b;
+      line-height: 1.5;
+    }
+
+    /* ===== CTA / WAT NU SECTION ===== */
+    .cta-section {
+      padding: 3rem 0 3.5rem;
+    }
+    .cta-card {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border-radius: 16px;
+      padding: 2.5rem 2.5rem;
+      color: #fff;
+    }
+    .cta-card h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .cta-card .cta-intro {
+      color: rgba(255,255,255,0.65);
+      font-size: 0.95rem;
+      margin-bottom: 2rem;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+    .step-card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: #3b82f6;
+      color: #fff;
+      border-radius: 50%;
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+    .step-card h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+    .step-card p {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.6);
+      line-height: 1.5;
+    }
+
+    .cta-bottom {
+      text-align: center;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .cta-bottom p {
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 1rem;
+    }
+    .cta-button {
+      display: inline-block;
+      background: #3b82f6;
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 0.85rem 2.5rem;
+      border-radius: 50px;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .cta-button:hover {
+      background: #2563eb;
+      transform: translateY(-1px);
+    }
+
+    /* ===== KOSTEN SECTION ===== */
+    .kosten-note {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.5rem 1.75rem;
+      margin-top: 1.5rem;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+    .kosten-note h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 0.5rem;
+    }
+    .kosten-note p {
+      font-size: 0.88rem;
+      color: #64748b;
+      line-height: 1.6;
+    }
+    .kosten-note strong { color: #1e293b; }
+    .highlight-price {
+      color: #dc2626;
+      font-weight: 700;
+    }
+
+    /* ===== FOOTER ===== */
+    .footer {
+      background: #1a1a2e;
+      color: rgba(255,255,255,0.5);
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.82rem;
+    }
+    .footer strong {
+      color: #fff;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    .footer a {
+      color: #3b82f6;
+      text-decoration: none;
+    }
+    .footer a:hover { text-decoration: underline; }
+    .footer-line {
+      margin-top: 0.5rem;
+    }
+
+    /* ===== DIVIDER ===== */
+    .section-divider {
+      border: none;
+      border-top: 1px solid #e2e8f0;
+      margin: 0;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 640px) {
+      .hero { padding: 2.5rem 1.25rem 2rem; }
+      .container { padding: 0 1rem; }
+      .issue-card { padding: 1.25rem; }
+      .cta-card { padding: 1.75rem 1.25rem; }
+      .score-hero-card { padding: 2rem 1.5rem; }
+      .total-score { font-size: 4rem; }
+      .nav { padding: 0.75rem 1rem; }
+      .nav-links { gap: 1rem; }
+      .nav-links a { font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVIGATION -->
+  <nav class="nav">
+    <a href="index.html" class="nav-brand">STUDIO<span>LEE</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="diensten.html">Diensten</a></li>
+      <li><a href="tarieven.html">Tarieven</a></li>
+      <li><a href="seo-rapport.html" class="active">SEO Rapport</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero-label">SEO Audit Rapport</div>
+    <h1>Severa <span>Hoveniers</span></h1>
+    <p class="hero-sub">severahoveniers.nl &mdash; Hoveniersbedrijf, Amsterdam</p>
+    <p class="hero-date">Rapport opgesteld op 1 april 2026</p>
+  </header>
+
+  <!-- SCORE OVERVIEW -->
+  <section class="score-section">
+    <div class="container">
+      <h2>Totaalscore</h2>
+
+      <div class="score-hero-card">
+        <div class="total-score">12 <span>/ 100</span></div>
+        <div class="total-label">Gemiddelde SEO-score</div>
+        <div class="total-verdict">Kritiek &mdash; Directe actie vereist</div>
+      </div>
+
+      <div class="score-grid">
+        <div class="score-card">
+          <div class="score-card-value score-red">8 <span>/100</span></div>
+          <div class="score-card-label">Technische SEO</div>
+          <div class="score-bar"><div class="score-bar-fill bar-red" style="width: 8%"></div></div>
+        </div>
+        <div class="score-card">
+          <div class="score-card-value score-red">5 <span>/100</span></div>
+          <div class="score-card-label">Content Kwaliteit</div>
+          <div class="score-bar"><div class="score-bar-fill bar-red" style="width: 5%"></div></div>
+        </div>
+        <div class="score-card">
+          <div class="score-card-value score-red">3 <span>/100</span></div>
+          <div class="score-card-label">Lokale SEO</div>
+          <div class="score-bar"><div class="score-bar-fill bar-red" style="width: 3%"></div></div>
+        </div>
+        <div class="score-card">
+          <div class="score-card-value score-orange">35 <span>/100</span></div>
+          <div class="score-card-label">Mobile UX</div>
+          <div class="score-bar"><div class="score-bar-fill bar-orange" style="width: 35%"></div></div>
+        </div>
+        <div class="score-card">
+          <div class="score-card-value score-orange">40 <span>/100</span></div>
+          <div class="score-card-label">Snelheid</div>
+          <div class="score-bar"><div class="score-bar-fill bar-orange" style="width: 40%"></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- ISSUES -->
+  <section class="issues-section">
+    <div class="container">
+      <h2>Gevonden Problemen</h2>
+      <p class="issues-intro">Hieronder staan alle kritieke problemen, waarschuwingen en adviespunten die we hebben gevonden bij een grondige analyse van severahoveniers.nl.</p>
+
+      <!-- Issue 1 -->
+      <div class="issue-card critical">
+        <div class="issue-header">
+          <div class="issue-number">1</div>
+          <div class="issue-title">Geen Title Tag</div>
+          <span class="badge badge-critical">Kritiek</span>
+        </div>
+        <div class="issue-body">
+          De website heeft helemaal geen <code>&lt;title&gt;</code>-tag. Google heeft hierdoor geen zinvolle titel om in de zoekresultaten te tonen. Potentiele klanten zien een lege of willekeurige tekst en scrollen direct door.
+          <div class="issue-impact">
+            <svg class="impact-icon" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 12.5a5.5 5.5 0 110-11 5.5 5.5 0 010 11zM7.25 5h1.5v4h-1.5V5zm0 5h1.5v1.5h-1.5V10z"/></svg>
+            <span class="impact-text"><strong>Impact:</strong> De title tag is de #1 rankingfactor voor Google. Zonder title tag is het praktisch onmogelijk om te ranken op relevante zoektermen als "hovenier Amsterdam".</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Issue 2 -->
+      <div class="issue-card critical">
+        <div class="issue-header">
+          <div class="issue-number">2</div>
+          <div class="issue-title">Geen Meta Description</div>
+          <span class="badge badge-critical">Kritiek</span>
+        </div>
+        <div class="issue-body">
+          Er is geen meta description ingesteld. Google genereert zelf een snippet uit de (placeholder) content op de pagina. Resultaat: nul click-appeal in de zoekresultaten.
+          <div class="issue-impact">
+            <svg class="impact-icon" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 12.5a5.5 5.5 0 110-11 5.5 5.5 0 010 11zM7.25 5h1.5v4h-1.5V5zm0 5h1.5v1.5h-1.5V10z"/></svg>
+            <span class="impact-text"><strong>Impact:</strong> Meta descriptions verhogen de click-through rate (CTR) met gemiddeld 5-10%. Zonder description verlies je potentiele bezoekers aan concurrenten die wel een aansprekende beschrijving tonen.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Issue 3 -->
+      <div class="issue-card critical">
+        <div class="issue-header">
+          <div class="issue-number">3</div>
+          <div class="issue-title">PHP-foutmeldingen Zichtbaar</div>
+          <span class="badge badge-critical">Kritiek</span>
+        </div>
+        <div class="issue-body">
+          Bovenaan elke pagina staat de foutmelding: <code>Warning: Constant DAY_CAMP_BUY_BUNDLE already defined</code>. Dit is een technische PHP-error die bezoekers direct afschrikt. Het straalt onprofessionaliteit uit en ondermijnt het vertrouwen volledig.
+          <div class="issue-impact">
+            <svg class="impact-icon" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 12.5a5.5 5.5 0 110-11 5.5 5.5 0 010 11zM7.25 5h1.5v4h-1.5V5zm0 5h1.5v1.5h-1.5V10z"/></svg>
+            <span class="impact-text"><strong>Impact:</strong> Bezoekers verlaten de site gemiddeld binnen 3 seconden wanneer ze technische fouten zien. Google ziet deze errors ook als een signaal van een slecht onderhouden site.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Issue 4 -->
+      <div class="issue-card critical">
+        <div class="issue-header">
+          <div class="issue-number">4</div>
+          <div class="issue-title">Verkeerde Template-branding</div>
+          <span class="badge badge-critical">Kritiek</span>
+        </div>
+        <div class="issue-body">
+          De website toont overal "Craftix" in plaats van Severa Hoveniers. Het hele thema is een standaard WordPress-template dat nooit is aangepast. Bezoekers weten niet of ze op de juiste site zitten.
+          <div class="issue-impact">
+            <svg class="impact-icon" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 12.5a5.5 5.5 0 110-11 5.5 5.5 0 010 11zM7.25 5h1.5v4h-1.5V5zm0 5h1.5v1.5h-1.5V10z"/></svg>
+            <span class="impact-text"><strong>Impact:</strong> Brand-verwarring leidt tot direct verlaten van de site. Google ziet ook dat de sitenaam niet overeenkomt met de bedrijfsnaam, wat de lokale SEO-rankings schaadt.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Issue 5 -->
+      <div class="issue-card critical">
+        <div class="issue-header">
+          <div class="issue-number">5</div>
+          <div class="issue-title">Nep-reviews / Dummy Testimonials</div>
+          <span class="badge badge-critical">Kritiek</span>
+        </div>
+        <div class="issue-body">
+          De reviewsectie toont placeholder-namen als "Robert Fox, Team Leader" met lorem ipsum-achtige tekst. Dit zijn duidelijk nepreviews uit het standaardthema. Bezoekers herkennen dit onmiddellijk.
+          <div class="issue-impact">
+            <svg class="impact-icon" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 12.5a5.5 5.5 0 110-11 5.5 5.5 0 010 11zM7.25 5h1.5v4h-1.5V5zm0 5h1.5v1.5h-1.5V10z"/></svg>
+            <span class="impact-text"><strong>Impact:</strong> Nepreviews vernietigen vertrouwen. 93% van consumenten leest reviews voor een aankoop. Fake reviews kunnen ook leiden tot juridische problemen onder de Europese consumentenwetgeving.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Issue 6 -->
+      <div class="issue-card critical">
+        <div class="issue-header">
+          <div class="issue-number">6</div>
+          <div class="issue-title">Placeholder Content</div>
+          <span class="badge badge-critical">Kritiek</span>
+        </div>
+        <div class="issue-body">
+          Meerdere secties op de website tonen <code>TITLE GOES HERE</code> met generieke placeholder-teksten. De site heeft geen echte content over de diensten, werkgebied of expertise van Severa Hoveniers.
+          <div class="issue-impact">
+            <svg class="impact-icon" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 12.5a5.5 5.5 0 110-11 5.5 5.5 0 010 11zM7.25 5h1.5v4h-1.5V5zm0 5h1.5v1.5h-1.5V10z"/></svg>
+            <span class="impact-text"><strong>Impact:</strong> Google kan de site niet indexeren voor relevante zoektermen als er geen echte content is. Zonder content geen rankings, zonder rankings geen bezoekers.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Issue 7 -->
+      <div class="issue-card warning">
+        <div class="issue-header">
+          <div class="issue-number">7</div>
+          <div class="issue-title">Externe Links naar Demo-site</div>
+          <span class="badge badge-warning">Waarschuwing</span>
+        </div>
+        <div class="issue-body">
+          De portfolio-links verwijzen naar <code>craftix.droip.io</code> &mdash; de demo-site van het template. Bezoekers die op projecten klikken, verlaten de site en komen terecht op een ongerelateerde pagina.
+          <div class="issue-impact">
+            <svg class="impact-icon" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 12.5a5.5 5.5 0 110-11 5.5 5.5 0 010 11zM7.25 5h1.5v4h-1.5V5zm0 5h1.5v1.5h-1.5V10z"/></svg>
+            <span class="impact-text"><strong>Impact:</strong> Elke bezoeker die op een portfoliolink klikt, is verloren. Daarnaast stuurt Google "link juice" door naar de demo-site in plaats van te behouden op severahoveniers.nl.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Issue 8 -->
+      <div class="issue-card warning">
+        <div class="issue-header">
+          <div class="issue-number">8</div>
+          <div class="issue-title">Slechte URL-structuur</div>
+          <span class="badge badge-warning">Waarschuwing</span>
+        </div>
+        <div class="issue-body">
+          Pagina's gebruiken URL's als <code>?page_id=1498</code> in plaats van SEO-vriendelijke slugs zoals <code>/diensten</code> of <code>/tuinaanleg-amsterdam</code>. Google geeft voorkeur aan leesbare URL's met relevante zoektermen.
+          <div class="issue-impact">
+            <svg class="impact-icon" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 12.5a5.5 5.5 0 110-11 5.5 5.5 0 010 11zM7.25 5h1.5v4h-1.5V5zm0 5h1.5v1.5h-1.5V10z"/></svg>
+            <span class="impact-text"><strong>Impact:</strong> Schone URL's verbeteren de CTR in zoekresultaten en helpen Google de sitestructuur beter te begrijpen. Dynamische parameters worden als minder betrouwbaar beschouwd.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Issue 9 -->
+      <div class="issue-card warning">
+        <div class="issue-header">
+          <div class="issue-number">9</div>
+          <div class="issue-title">Geen Structured Data</div>
+          <span class="badge badge-warning">Waarschuwing</span>
+        </div>
+        <div class="issue-body">
+          Er is geen LocalBusiness schema, geen reviews schema en geen enkel type structured data aanwezig. Hierdoor mist de site alle "rich results" in Google zoals sterren, openingstijden en locatiegegevens.
+          <div class="issue-impact">
+            <svg class="impact-icon" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 12.5a5.5 5.5 0 110-11 5.5 5.5 0 010 11zM7.25 5h1.5v4h-1.5V5zm0 5h1.5v1.5h-1.5V10z"/></svg>
+            <span class="impact-text"><strong>Impact:</strong> Structured data kan de CTR met 20-30% verhogen via rich snippets. Concurrenten met schema markup verschijnen prominenter in de zoekresultaten.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Issue 10 -->
+      <div class="issue-card info">
+        <div class="issue-header">
+          <div class="issue-number">10</div>
+          <div class="issue-title">Geen Open Graph Tags</div>
+          <span class="badge badge-info">Advies</span>
+        </div>
+        <div class="issue-body">
+          Er zijn geen Open Graph (OG) tags ingesteld. Wanneer de site wordt gedeeld op social media (Facebook, LinkedIn, WhatsApp), verschijnt er geen afbeelding, titel of beschrijving. Deellinks zien er gebroken uit.
+          <div class="issue-impact">
+            <svg class="impact-icon" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 12.5a5.5 5.5 0 110-11 5.5 5.5 0 010 11zM7.25 5h1.5v4h-1.5V5zm0 5h1.5v1.5h-1.5V10z"/></svg>
+            <span class="impact-text"><strong>Impact:</strong> Social media shares zonder preview genereren tot 80% minder clicks. Mond-tot-mond reclame via WhatsApp en Facebook wordt hierdoor onbruikbaar.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Issue 11 -->
+      <div class="issue-card critical">
+        <div class="issue-header">
+          <div class="issue-number">11</div>
+          <div class="issue-title">Alle Subpagina's Geven 404</div>
+          <span class="badge badge-critical">Kritiek</span>
+        </div>
+        <div class="issue-body">
+          De pagina's <code>/tarieven</code>, <code>/wie-zijn-wij</code> en <code>/contact</code> retourneren allemaal 404-fouten. Bezoekers die specifieke informatie zoeken, komen op een dode pagina terecht en verlaten de site onmiddellijk.
+          <div class="issue-impact">
+            <svg class="impact-icon" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 12.5a5.5 5.5 0 110-11 5.5 5.5 0 010 11zM7.25 5h1.5v4h-1.5V5zm0 5h1.5v1.5h-1.5V10z"/></svg>
+            <span class="impact-text"><strong>Impact:</strong> 404-fouten zijn een direct negatief signaal voor Google. Elke kapotte pagina verslechtert de algehele site-autoriteit en gebruikerservaring.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Issue 12 -->
+      <div class="issue-card warning">
+        <div class="issue-header">
+          <div class="issue-number">12</div>
+          <div class="issue-title">Betaalt &euro;20/maand aan Misterdot</div>
+          <span class="badge badge-warning">Waarschuwing</span>
+        </div>
+        <div class="issue-body">
+          Severa Hoveniers betaalt momenteel <span class="highlight-price">&euro;20 per maand</span> aan Misterdot voor hosting die een compleet onbruikbare site oplevert. Dit is &euro;240 per jaar voor nul SEO-waarde en een kapotte online aanwezigheid.
+          <div class="issue-impact">
+            <svg class="impact-icon" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 12.5a5.5 5.5 0 110-11 5.5 5.5 0 010 11zM7.25 5h1.5v4h-1.5V5zm0 5h1.5v1.5h-1.5V10z"/></svg>
+            <span class="impact-text"><strong>Impact:</strong> Het huidige hostingcontract levert actief schade op. Elke dag dat de site in deze staat online staat, beschadigt de reputatie en het Google-profiel van Severa Hoveniers.</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <hr class="section-divider">
+
+  <!-- WAT NU -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-card">
+        <h2>Wat Nu?</h2>
+        <p class="cta-intro">De huidige website van Severa Hoveniers is niet te repareren &mdash; het vereist een volledige vervanging. Hieronder ons aanbevolen stappenplan:</p>
+
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-number">1</div>
+            <h3>Nieuwe Website</h3>
+            <p>Een professionele, snelle website gebouwd op moderne technologie. Geen WordPress, geen plugins, geen onderhoudskopzorgen. Inclusief alle SEO-basics vanaf dag 1.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-number">2</div>
+            <h3>Lokale SEO Optimalisatie</h3>
+            <p>Google Mijn Bedrijf optimaliseren, LocalBusiness schema toevoegen en lokale zoektermen als "hovenier Amsterdam" targeten voor maximale zichtbaarheid.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-number">3</div>
+            <h3>Content Strategie</h3>
+            <p>Echte content schrijven over diensten, projecten en expertise. Een blog starten met SEO-geoptimaliseerde artikelen die organisch verkeer aantrekken.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-number">4</div>
+            <h3>Hosting Overstappen</h3>
+            <p>Weg bij Misterdot. Overstappen naar snelle, betrouwbare hosting met SSL, CDN en 99.9% uptime. Bespaar kosten en verhoog de prestaties.</p>
+          </div>
+        </div>
+
+        <div class="cta-bottom">
+          <p>Klaar om de online aanwezigheid van Severa Hoveniers te transformeren?</p>
+          <a href="https://calendly.com/tim-studiolee" class="cta-button" target="_blank" rel="noopener">Plan een Gratis Gesprek</a>
+        </div>
+      </div>
+
+      <div class="kosten-note">
+        <h3>Over de Huidige Kosten</h3>
+        <p>
+          Met <span class="highlight-price">&euro;20/maand</span> aan Misterdot betaalt Severa Hoveniers <strong>&euro;240 per jaar</strong> voor een website die actief klanten wegjaagt.
+          Een professionele website bij StudioLee kost slechts <strong>&euro;15/maand</strong> inclusief hosting, onderhoud, en een site die daadwerkelijk klanten aantrekt &mdash;
+          met onze <strong>Groei-of-Geld-Terug Garantie</strong>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div>Rapport opgesteld door <strong>STUDIOLEE</strong> &mdash; <a href="mailto:tim@studiolee.nl">tim@studiolee.nl</a></div>
+    <div class="footer-line">&copy; 2026 StudioLee. Alle rechten voorbehouden.</div>
+  </footer>
+
+</body>
+</html>

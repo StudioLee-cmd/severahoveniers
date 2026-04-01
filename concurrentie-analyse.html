@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concurrentie-analyse — Severa Hoveniers | StudioLee</title>
+    <style>
+        /* ── Reset & Base ── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: #1e293b;
+            background: #f8fafc;
+            line-height: 1.6;
+        }
+
+        /* ── Navigation ── */
+        nav {
+            background: #1a1a2e;
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+        }
+        nav .nav-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        nav .logo {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        nav .logo span { color: #3b82f6; }
+        nav .nav-links { display: flex; gap: 24px; align-items: center; }
+        nav .nav-links a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        nav .nav-links a:hover,
+        nav .nav-links a.active { color: #fff; }
+
+        /* ── Header / Hero ── */
+        .hero {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #fff;
+            padding: 80px 24px 60px;
+            text-align: center;
+        }
+        .hero h1 {
+            font-size: clamp(28px, 5vw, 48px);
+            font-weight: 800;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+        .hero h1 span { color: #3b82f6; }
+        .hero .subtitle {
+            font-size: clamp(16px, 2.5vw, 20px);
+            color: #94a3b8;
+            max-width: 700px;
+            margin: 0 auto 32px;
+        }
+        .hero .meta {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            flex-wrap: wrap;
+            font-size: 14px;
+            color: #64748b;
+        }
+        .hero .meta span { display: flex; align-items: center; gap: 6px; }
+
+        /* ── Container ── */
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+        /* ── Score Overview ── */
+        .score-overview {
+            padding: 64px 24px;
+            background: #fff;
+        }
+        .score-overview h2 {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .score-overview .section-sub {
+            text-align: center;
+            color: #64748b;
+            margin-bottom: 48px;
+            font-size: 16px;
+        }
+        .score-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .score-card {
+            text-align: center;
+            padding: 28px 16px;
+            border-radius: 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .score-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+        .score-card.severa {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            border-color: #fca5a5;
+        }
+        .score-card .score-value {
+            font-size: 42px;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+        .score-card .score-label {
+            font-size: 13px;
+            color: #64748b;
+            font-weight: 500;
+        }
+        .score-card .score-100 { font-size: 16px; color: #94a3b8; font-weight: 400; }
+        .score-severa { color: #dc2626; }
+        .score-avg { color: #3b82f6; }
+        .score-best { color: #16a34a; }
+
+        .gap-bar {
+            max-width: 700px;
+            margin: 48px auto 0;
+            padding: 32px;
+            background: #1a1a2e;
+            border-radius: 16px;
+            color: #fff;
+        }
+        .gap-bar .gap-title {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #94a3b8;
+            margin-bottom: 16px;
+        }
+        .gap-track {
+            height: 16px;
+            background: #334155;
+            border-radius: 99px;
+            position: relative;
+            overflow: visible;
+        }
+        .gap-fill-severa {
+            position: absolute;
+            left: 0; top: 0; height: 100%;
+            width: 12%;
+            background: #dc2626;
+            border-radius: 99px 0 0 99px;
+            transition: width 1s ease;
+        }
+        .gap-fill-avg {
+            position: absolute;
+            left: 0; top: 0; height: 100%;
+            width: 62%;
+            background: rgba(59,130,246,0.25);
+            border-radius: 99px;
+        }
+        .gap-markers {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+            font-size: 13px;
+            color: #94a3b8;
+        }
+        .gap-marker-severa { color: #f87171; font-weight: 600; }
+        .gap-marker-avg { color: #60a5fa; font-weight: 600; }
+
+        /* ── Comparison Table ── */
+        .table-section {
+            padding: 64px 24px;
+            background: #f8fafc;
+        }
+        .table-section h2 {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .table-section .section-sub {
+            text-align: center;
+            color: #64748b;
+            margin-bottom: 48px;
+            font-size: 16px;
+        }
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+        }
+        table {
+            width: 100%;
+            min-width: 800px;
+            border-collapse: collapse;
+            background: #fff;
+        }
+        thead th {
+            background: #1a1a2e;
+            color: #fff;
+            padding: 16px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-align: left;
+            white-space: nowrap;
+        }
+        thead th:first-child { border-radius: 12px 0 0 0; }
+        thead th:last-child { border-radius: 0 12px 0 0; }
+        tbody td {
+            padding: 14px;
+            font-size: 14px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: top;
+        }
+        tbody tr:hover { background: #f8fafc; }
+        tbody tr.severa-row {
+            background: #fef2f2;
+        }
+        tbody tr.severa-row:hover { background: #fee2e2; }
+        tbody tr.severa-row td { font-weight: 600; color: #991b1b; }
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 99px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-red { background: #fee2e2; color: #dc2626; }
+        .badge-green { background: #dcfce7; color: #16a34a; }
+        .badge-blue { background: #dbeafe; color: #2563eb; }
+        .badge-yellow { background: #fef9c3; color: #a16207; }
+        .badge-gray { background: #f1f5f9; color: #64748b; }
+
+        /* ── Competitor Cards ── */
+        .cards-section {
+            padding: 64px 24px;
+            background: #fff;
+        }
+        .cards-section h2 {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .cards-section .section-sub {
+            text-align: center;
+            color: #64748b;
+            margin-bottom: 48px;
+            font-size: 16px;
+        }
+        .competitor-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 24px;
+        }
+        .competitor-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .competitor-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            padding: 24px 24px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+        }
+        .card-header h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .card-header .domain {
+            font-size: 13px;
+            color: #3b82f6;
+        }
+        .card-rank {
+            width: 36px; height: 36px;
+            background: #1a1a2e;
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .card-body { padding: 20px 24px; }
+        .card-body h4 {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .card-body ul {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+        .card-body ul li {
+            padding: 6px 0;
+            font-size: 14px;
+            position: relative;
+            padding-left: 20px;
+        }
+        .card-body ul li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 12px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        .strengths li::before { background: #16a34a; }
+        .weaknesses li::before { background: #f59e0b; }
+        .lessons li::before { background: #3b82f6; }
+
+        .card-footer {
+            padding: 16px 24px;
+            background: #f8fafc;
+            border-top: 1px solid #f1f5f9;
+        }
+        .card-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+        .tag {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        /* ── Kansen Section ── */
+        .kansen-section {
+            padding: 64px 24px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+        }
+        .kansen-section h2 {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .kansen-section .section-sub {
+            text-align: center;
+            color: #94a3b8;
+            margin-bottom: 48px;
+            font-size: 16px;
+        }
+        .kansen-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .kans-card {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 28px;
+            transition: background 0.2s;
+        }
+        .kans-card:hover { background: rgba(255,255,255,0.1); }
+        .kans-icon {
+            width: 48px; height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin-bottom: 16px;
+        }
+        .kans-icon.seo { background: rgba(59,130,246,0.2); }
+        .kans-icon.trust { background: rgba(16,185,129,0.2); }
+        .kans-icon.content { background: rgba(245,158,11,0.2); }
+        .kans-icon.local { background: rgba(139,92,246,0.2); }
+        .kans-icon.niche { background: rgba(236,72,153,0.2); }
+        .kans-icon.speed { background: rgba(6,182,212,0.2); }
+        .kans-card h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .kans-card p {
+            font-size: 14px;
+            color: #94a3b8;
+            line-height: 1.7;
+        }
+        .kans-priority {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 4px 12px;
+            border-radius: 99px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .priority-high { background: rgba(239,68,68,0.2); color: #f87171; }
+        .priority-medium { background: rgba(245,158,11,0.2); color: #fbbf24; }
+
+        /* ── Actieplan ── */
+        .actieplan-section {
+            padding: 64px 24px;
+            background: #fff;
+        }
+        .actieplan-section h2 {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .actieplan-section .section-sub {
+            text-align: center;
+            color: #64748b;
+            margin-bottom: 48px;
+            font-size: 16px;
+        }
+        .timeline {
+            max-width: 700px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 24px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, #3b82f6, #2d5a27);
+            border-radius: 99px;
+        }
+        .timeline-item {
+            position: relative;
+            padding-left: 64px;
+            margin-bottom: 36px;
+        }
+        .timeline-dot {
+            position: absolute;
+            left: 14px;
+            top: 4px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 3px solid #3b82f6;
+            background: #fff;
+        }
+        .timeline-item:last-child .timeline-dot { border-color: #2d5a27; }
+        .timeline-phase {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #3b82f6;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .timeline-item:last-child .timeline-phase { color: #2d5a27; }
+        .timeline-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        .timeline-desc {
+            font-size: 14px;
+            color: #64748b;
+            line-height: 1.7;
+        }
+
+        /* ── CTA ── */
+        .cta-section {
+            padding: 80px 24px;
+            background: linear-gradient(135deg, #2d5a27, #16a34a);
+            text-align: center;
+            color: #fff;
+        }
+        .cta-section h2 {
+            font-size: clamp(24px, 4vw, 36px);
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+        .cta-section p {
+            font-size: 18px;
+            color: rgba(255,255,255,0.85);
+            max-width: 600px;
+            margin: 0 auto 32px;
+        }
+        .cta-btn {
+            display: inline-block;
+            padding: 16px 40px;
+            background: #fff;
+            color: #2d5a27;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 99px;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+
+        /* ── Footer ── */
+        footer {
+            background: #1a1a2e;
+            color: #64748b;
+            padding: 32px 24px;
+            text-align: center;
+            font-size: 14px;
+        }
+        footer a { color: #3b82f6; text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+        footer .footer-brand {
+            font-size: 13px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #94a3b8;
+            margin-bottom: 8px;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .hero { padding: 60px 20px 40px; }
+            .hero .meta { gap: 16px; }
+            .score-cards { grid-template-columns: repeat(2, 1fr); }
+            .competitor-grid { grid-template-columns: 1fr; }
+            .kansen-grid { grid-template-columns: 1fr; }
+            thead th, tbody td { padding: 10px 8px; font-size: 12px; }
+            nav .nav-links { gap: 14px; }
+            nav .nav-links a { font-size: 13px; }
+        }
+        @media (max-width: 480px) {
+            .score-cards { grid-template-columns: 1fr; }
+            .hero .meta { flex-direction: column; gap: 8px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav>
+    <div class="nav-inner">
+        <a href="index.html" class="logo">STUDIO<span>LEE</span></a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="concurrentie-analyse.html" class="active">Concurrentie-analyse</a>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero -->
+<div class="hero">
+    <h1>Concurrentie-analyse <span>Severa Hoveniers</span></h1>
+    <p class="subtitle">Een diepgaande vergelijking met de 5 sterkste concurrenten in Amsterdam. Waar sta je nu, en wat zijn de kansen?</p>
+    <div class="meta">
+        <span>Markt: Hoveniers Amsterdam</span>
+        <span>Datum: 1 april 2026</span>
+        <span>Opgesteld door: StudioLee</span>
+    </div>
+</div>
+
+<!-- Score Overview -->
+<section class="score-overview">
+    <div class="container">
+        <h2>Positie in de Markt</h2>
+        <p class="section-sub">Hoe scoort Severa Hoveniers ten opzichte van de concurrentie?</p>
+
+        <div class="score-cards">
+            <div class="score-card severa">
+                <div class="score-value score-severa">12<span class="score-100">/100</span></div>
+                <div class="score-label">Severa Hoveniers</div>
+            </div>
+            <div class="score-card">
+                <div class="score-value score-avg">62<span class="score-100">/100</span></div>
+                <div class="score-label">Gemiddelde concurrent</div>
+            </div>
+            <div class="score-card">
+                <div class="score-value score-best">78<span class="score-100">/100</span></div>
+                <div class="score-label">Beste concurrent</div>
+            </div>
+            <div class="score-card">
+                <div class="score-value" style="color:#f59e0b;">50</div>
+                <div class="score-label">Punten achterstand</div>
+            </div>
+            <div class="score-card">
+                <div class="score-value" style="color:#8b5cf6;">5</div>
+                <div class="score-label">Concurrenten geanalyseerd</div>
+            </div>
+        </div>
+
+        <div class="gap-bar">
+            <div class="gap-title">Kloof met de markt</div>
+            <div class="gap-track">
+                <div class="gap-fill-avg"></div>
+                <div class="gap-fill-severa"></div>
+            </div>
+            <div class="gap-markers">
+                <span class="gap-marker-severa">Severa: 12/100</span>
+                <span class="gap-marker-avg">Marktgemiddelde: 62/100</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Comparison Table -->
+<section class="table-section">
+    <div class="container">
+        <h2>Vergelijkingstabel</h2>
+        <p class="section-sub">Alle hoveniers naast elkaar op de belangrijkste criteria</p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Bedrijf</th>
+                        <th>Ervaring</th>
+                        <th>SEO Score</th>
+                        <th>Diensten</th>
+                        <th>Reviews / Social Proof</th>
+                        <th>Certificering</th>
+                        <th>USP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="severa-row">
+                        <td>
+                            <strong>Severa Hoveniers</strong><br>
+                            <span style="font-size:12px; color:#991b1b;">severahoveniers.nl</span>
+                        </td>
+                        <td>Onbekend</td>
+                        <td><span class="badge badge-red">12/100</span></td>
+                        <td>Website niet functioneel</td>
+                        <td>Geen zichtbare reviews</td>
+                        <td>Geen</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <strong>Schoffelstudent</strong><br>
+                            <span style="font-size:12px; color:#3b82f6;">schoffelstudent.nl</span>
+                        </td>
+                        <td>5.500+ klussen</td>
+                        <td><span class="badge badge-green">78/100</span></td>
+                        <td>Tuinaanleg, onderhoud, ontwerp, architect</td>
+                        <td>8.5+ rating, garantiesectie</td>
+                        <td>Geen vermeld</td>
+                        <td>Volume + betaalbaarheid</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <strong>Kooter Hoveniers</strong><br>
+                            <span style="font-size:12px; color:#3b82f6;">kooterhoveniers.nl</span>
+                        </td>
+                        <td>Gevestigd (Amsterdam)</td>
+                        <td><span class="badge badge-blue">58/100</span></td>
+                        <td>Boomverzorging, snoeien, kappen</td>
+                        <td>Lokaal 020-nummer</td>
+                        <td>Specialist boomverzorging</td>
+                        <td>Niche-expertise bomen</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <strong>Kroon Hoveniers</strong><br>
+                            <span style="font-size:12px; color:#3b82f6;">kroon-hoveniersbedrijf.nl</span>
+                        </td>
+                        <td>40+ jaar</td>
+                        <td><span class="badge badge-green">68/100</span></td>
+                        <td>Onderhoud, renovatie, bomen, vijvers, water</td>
+                        <td>VHG keurmerk, WhatsApp</td>
+                        <td><span class="badge badge-green">VHG Keurmerk</span></td>
+                        <td>Ervaring + 10% plankorting</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <strong>Amstelhoveniers</strong><br>
+                            <span style="font-size:12px; color:#3b82f6;">amstelhoveniers.nl</span>
+                        </td>
+                        <td>30+ jaar</td>
+                        <td><span class="badge badge-blue">62/100</span></td>
+                        <td>Totaalconcept: ontwerp, aanleg, exclusief</td>
+                        <td>Portfolio, prijsindicatie</td>
+                        <td>Geen vermeld</td>
+                        <td>Urban farming & exclusief</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <strong>Van Rooyen Hoveniers</strong><br>
+                            <span style="font-size:12px; color:#3b82f6;">vanrooyenhoveniers.nl</span>
+                        </td>
+                        <td>13 jaar</td>
+                        <td><span class="badge badge-blue">55/100</span></td>
+                        <td>Ontwerp, aanleg, onderhoud, beplanting</td>
+                        <td>Persoonlijke quote Dennis</td>
+                        <td>Geen vermeld</td>
+                        <td>Duurzaamheid & persoonlijk</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- Competitor Cards -->
+<section class="cards-section">
+    <div class="container">
+        <h2>Concurrenten in Detail</h2>
+        <p class="section-sub">Per concurrent: sterktes, zwaktes en wat Severa hiervan kan leren</p>
+
+        <div class="competitor-grid">
+
+            <!-- 1. Schoffelstudent -->
+            <div class="competitor-card">
+                <div class="card-header">
+                    <div>
+                        <h3>Schoffelstudent</h3>
+                        <span class="domain">schoffelstudent.nl</span>
+                    </div>
+                    <div class="card-rank">1</div>
+                </div>
+                <div class="card-body">
+                    <h4>Sterktes</h4>
+                    <ul class="strengths">
+                        <li>5.500+ klussen uitgevoerd — enorm volume als social proof</li>
+                        <li>8.5+ klantbeoordeling prominent zichtbaar</li>
+                        <li>Sterke SEO-landingspagina voor "hovenier amsterdam"</li>
+                        <li>Garantiesectie: "Wat als het werk niet naar wens is?"</li>
+                    </ul>
+                    <h4>Zwaktes</h4>
+                    <ul class="weaknesses">
+                        <li>Student-positionering schrikt high-end klanten af</li>
+                        <li>Geen formele certificeringen vermeld</li>
+                    </ul>
+                    <h4>Lessen voor Severa</h4>
+                    <ul class="lessons">
+                        <li>Investeer in een garantiesectie op de website</li>
+                        <li>Maak het aantal uitgevoerde projecten zichtbaar</li>
+                        <li>Bouw een gerichte landingspagina voor "hovenier amsterdam"</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <div class="card-tags">
+                        <span class="tag">SEO Sterk</span>
+                        <span class="tag">Social Proof</span>
+                        <span class="tag">Marktleider</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Kooter Hoveniers -->
+            <div class="competitor-card">
+                <div class="card-header">
+                    <div>
+                        <h3>Kooter Hoveniers</h3>
+                        <span class="domain">kooterhoveniers.nl</span>
+                    </div>
+                    <div class="card-rank">2</div>
+                </div>
+                <div class="card-body">
+                    <h4>Sterktes</h4>
+                    <ul class="strengths">
+                        <li>Specialist in boomverzorging Amsterdam — duidelijke niche</li>
+                        <li>Lokaal Amsterdams 020-nummer prominent op de website</li>
+                        <li>Gerichte landingspagina voor "boomverzorging amsterdam"</li>
+                    </ul>
+                    <h4>Zwaktes</h4>
+                    <ul class="weaknesses">
+                        <li>Smal dienstenaanbod — alleen boomgerelateerd</li>
+                        <li>Beperkte bredere hovenier-positionering</li>
+                    </ul>
+                    <h4>Lessen voor Severa</h4>
+                    <ul class="lessons">
+                        <li>Overweeg niche-landingspagina's per dienst</li>
+                        <li>Gebruik een lokaal telefoonnummer voor vertrouwen</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <div class="card-tags">
+                        <span class="tag">Niche Specialist</span>
+                        <span class="tag">Lokaal Vertrouwen</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Kroon Hoveniers -->
+            <div class="competitor-card">
+                <div class="card-header">
+                    <div>
+                        <h3>Kroon Hoveniers</h3>
+                        <span class="domain">kroon-hoveniersbedrijf.nl</span>
+                    </div>
+                    <div class="card-rank">3</div>
+                </div>
+                <div class="card-body">
+                    <h4>Sterktes</h4>
+                    <ul class="strengths">
+                        <li>40+ jaar ervaring — sterk gevestigde reputatie</li>
+                        <li>VHG Keurmerk gecertificeerd — vertrouwenssignaal</li>
+                        <li>Breed dienstenaanbod inclusief vijvers en watersystemen</li>
+                        <li>"Direct plannen = 10% korting" — conversie-trigger</li>
+                        <li>WhatsApp contact — laagdrempelig</li>
+                    </ul>
+                    <h4>Zwaktes</h4>
+                    <ul class="weaknesses">
+                        <li>Verouderd websitedesign</li>
+                        <li>Minder sterke visuele presentatie</li>
+                    </ul>
+                    <h4>Lessen voor Severa</h4>
+                    <ul class="lessons">
+                        <li>Overweeg VHG-certificering of vergelijkbaar keurmerk</li>
+                        <li>Gebruik kortingsacties als conversie-middel</li>
+                        <li>Bied WhatsApp als contactmethode aan</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <div class="card-tags">
+                        <span class="tag">VHG Gecertificeerd</span>
+                        <span class="tag">40+ Jaar</span>
+                        <span class="tag">Breed Aanbod</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Amstelhoveniers -->
+            <div class="competitor-card">
+                <div class="card-header">
+                    <div>
+                        <h3>Amstelhoveniers</h3>
+                        <span class="domain">amstelhoveniers.nl</span>
+                    </div>
+                    <div class="card-rank">4</div>
+                </div>
+                <div class="card-body">
+                    <h4>Sterktes</h4>
+                    <ul class="strengths">
+                        <li>30+ jaar ervaring — geloofwaardigheid</li>
+                        <li>Innovatieve projecten en urban farming specialist</li>
+                        <li>Duidelijke werkwijze in 4 stappen</li>
+                        <li>Prijsindicatie op de website — transparantie</li>
+                        <li>Portfolio met exclusieve projecten</li>
+                    </ul>
+                    <h4>Zwaktes</h4>
+                    <ul class="weaknesses">
+                        <li>High-end positionering sluit kleinere klussen uit</li>
+                        <li>Minder bereikbaar voor het middensegment</li>
+                    </ul>
+                    <h4>Lessen voor Severa</h4>
+                    <ul class="lessons">
+                        <li>Toon een duidelijke werkwijze (stap-voor-stap)</li>
+                        <li>Overweeg prijsindicaties voor transparantie</li>
+                        <li>Bouw een sterk portfolio op de website</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <div class="card-tags">
+                        <span class="tag">Premium Segment</span>
+                        <span class="tag">Urban Farming</span>
+                        <span class="tag">Transparant</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Van Rooyen Hoveniers -->
+            <div class="competitor-card">
+                <div class="card-header">
+                    <div>
+                        <h3>Van Rooyen Hoveniers</h3>
+                        <span class="domain">vanrooyenhoveniers.nl</span>
+                    </div>
+                    <div class="card-rank">5</div>
+                </div>
+                <div class="card-body">
+                    <h4>Sterktes</h4>
+                    <ul class="strengths">
+                        <li>13 jaar ervaring met persoonlijke aanpak</li>
+                        <li>Duurzaamheidsfocus — elektrisch materieel</li>
+                        <li>Persoonlijke branding (Dennis als gezicht)</li>
+                        <li>Gerichte landingspagina voor "tuinman amsterdam"</li>
+                    </ul>
+                    <h4>Zwaktes</h4>
+                    <ul class="weaknesses">
+                        <li>Kleiner bedrijf — minder social proof</li>
+                        <li>Beperkt aantal reviews/testimonials</li>
+                    </ul>
+                    <h4>Lessen voor Severa</h4>
+                    <ul class="lessons">
+                        <li>Zet duurzaamheid in als onderscheidend punt</li>
+                        <li>Gebruik een persoonlijk gezicht op de website</li>
+                        <li>Maak landingspagina's per zoekterm (bijv. "tuinman amsterdam")</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <div class="card-tags">
+                        <span class="tag">Duurzaam</span>
+                        <span class="tag">Persoonlijk</span>
+                        <span class="tag">Tuinman Niche</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- Kansen voor Severa -->
+<section class="kansen-section" id="kansen">
+    <div class="container">
+        <h2>Kansen voor Severa Hoveniers</h2>
+        <p class="section-sub">Op basis van de concurrentie-analyse: dit zijn de grootste groeikansen</p>
+
+        <div class="kansen-grid">
+
+            <div class="kans-card">
+                <div class="kans-icon seo">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                </div>
+                <h3>SEO-fundament Opbouwen</h3>
+                <p>Geen enkele concurrent domineert alle zoektermen. Er is ruimte om landingspagina's te bouwen voor "hovenier amsterdam", "tuinonderhoud amsterdam", "tuinaanleg amsterdam" en meer. Eén sterke pagina per zoekterm maakt het verschil.</p>
+                <span class="kans-priority priority-high">Hoge prioriteit</span>
+            </div>
+
+            <div class="kans-card">
+                <div class="kans-icon trust">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <h3>Vertrouwen & Reviews</h3>
+                <p>Schoffelstudent wint klanten met 5.500+ klussen en 8.5+ rating. Severa heeft nul zichtbare reviews. Start actief met het verzamelen van Google Reviews en toon deze prominent op de website. Dit is de snelste weg naar conversie.</p>
+                <span class="kans-priority priority-high">Hoge prioriteit</span>
+            </div>
+
+            <div class="kans-card">
+                <div class="kans-icon content">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                <h3>Moderne Website</h3>
+                <p>Kroon Hoveniers heeft een verouderd design. Severa's website is kapot. Een modern, professioneel ontwerp met duidelijke werkwijze, portfolio en prijsindicatie plaatst Severa direct boven meerdere concurrenten qua presentatie.</p>
+                <span class="kans-priority priority-high">Hoge prioriteit</span>
+            </div>
+
+            <div class="kans-card">
+                <div class="kans-icon local">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                </div>
+                <h3>Lokale Autoriteit</h3>
+                <p>Google Mijn Bedrijf optimaliseren, lokaal 020-nummer tonen (zoals Kooter), en wijk-specifieke content schrijven. Amsterdam kent veel buurten — "hovenier Oud-Zuid", "tuinman De Pijp" zijn onbenutte zoektermen.</p>
+                <span class="kans-priority priority-medium">Medium prioriteit</span>
+            </div>
+
+            <div class="kans-card">
+                <div class="kans-icon niche">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <h3>Differentiatie: Duurzaam & Persoonlijk</h3>
+                <p>Van Rooyen claimt duurzaamheid, maar niemand gaat er echt diep op in. Severa kan zich positioneren als de duurzame hovenier van Amsterdam: biologisch tuinieren, inheemse beplanting, natuurvriendelijke aanpak. Dit trekt een groeiend publiek.</p>
+                <span class="kans-priority priority-medium">Medium prioriteit</span>
+            </div>
+
+            <div class="kans-card">
+                <div class="kans-icon speed">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                </div>
+                <h3>Snelle Offerte & WhatsApp</h3>
+                <p>Kroon Hoveniers biedt WhatsApp contact en 10% korting bij direct plannen. Severa kan dit overtreffen: "Offerte binnen 24 uur" belofte, WhatsApp knop, en een online calculator voor tuinonderhoud. Laagdrempelig wint.</p>
+                <span class="kans-priority priority-medium">Medium prioriteit</span>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- Actieplan -->
+<section class="actieplan-section">
+    <div class="container">
+        <h2>Aanbevolen Actieplan</h2>
+        <p class="section-sub">Van 12/100 naar marktleider — stap voor stap</p>
+
+        <div class="timeline">
+
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-phase">Fase 1 — Week 1-2</div>
+                <div class="timeline-title">Website Repareren & Lanceren</div>
+                <div class="timeline-desc">Nieuwe professionele website met duidelijke diensten, werkwijze, contactmogelijkheden (WhatsApp + telefoon), en Google Mijn Bedrijf profiel activeren. Dit is de basis zonder welke niets anders werkt.</div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-phase">Fase 2 — Week 2-4</div>
+                <div class="timeline-title">SEO-fundament Leggen</div>
+                <div class="timeline-desc">Landingspagina's bouwen per kernzoekterm: "hovenier amsterdam", "tuinonderhoud amsterdam", "tuinaanleg amsterdam". Meta-tags, H1-structuur en interne links optimaliseren. Blog starten met 2 artikelen per maand.</div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-phase">Fase 3 — Maand 2-3</div>
+                <div class="timeline-title">Social Proof Opbouwen</div>
+                <div class="timeline-desc">Actief Google Reviews verzamelen bij bestaande klanten. Portfolio-pagina met foto's van uitgevoerde projecten. Testimonials prominent op de homepage. Doel: minimaal 10 reviews met 4.5+ gemiddelde.</div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-phase">Fase 4 — Maand 3-6</div>
+                <div class="timeline-title">Lokale Dominantie</div>
+                <div class="timeline-desc">Wijk-specifieke pagina's (Oud-Zuid, De Pijp, Jordaan), lokale backlinks opbouwen, en social media aanwezigheid uitbreiden. Doel: top 5 voor minimaal 3 hoveniers-zoektermen in Amsterdam.</div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-phase">Resultaat</div>
+                <div class="timeline-title">Van 12/100 naar 65+ / 100</div>
+                <div class="timeline-desc">Met deze aanpak kan Severa Hoveniers binnen 6 maanden van onzichtbaar naar een sterke marktpositie groeien. Het gat met de concurrentie is groot, maar dat betekent ook: enorm groeipotentieel.</div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+    <h2>Klaar om Severa Hoveniers te Laten Groeien?</h2>
+    <p>StudioLee helpt hoveniers van onzichtbaar naar onmisbaar. Plan een gratis strategiegesprek en we bespreken hoe we deze kansen omzetten in resultaat.</p>
+    <a href="https://calendly.com/tim-studiolee" class="cta-btn">Plan een Gratis Gesprek</a>
+</section>
+
+<!-- Footer -->
+<footer>
+    <div class="footer-brand">Rapport opgesteld door STUDIOLEE</div>
+    <p>
+        <a href="mailto:tim@studiolee.nl">tim@studiolee.nl</a>
+         &mdash;
+        <a href="https://www.studiolee.nl">www.studiolee.nl</a>
+    </p>
+    <p style="margin-top: 12px; font-size: 12px; color: #475569;">
+        Concurrentie-analyse Severa Hoveniers &mdash; Amsterdam &mdash; April 2026
+    </p>
+</footer>
+
+</body>
+</html>
